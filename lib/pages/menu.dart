@@ -2,61 +2,65 @@ import 'dart:convert';
 
 import 'package:chumcha/main.dart';
 import 'package:flutter/material.dart';
-import 'package:chumcha/interfaces/interface_menu.dart';
 import 'package:chumcha/json_parse/json_parse_menu.dart';
+import 'package:flutter_redux/flutter_redux.dart';
 import 'package:intl/intl.dart';
 
 double widthScreen = 200;
 
-class Menu extends StatefulWidget {
-  final List<JsonMenu?>? menu;
-  const Menu({super.key, this.menu});
-
-  @override
-  State<Menu> createState() => _MenuState();
+List<IMenu> addMenu(List<IMenu> state, dynamic action) {
+  state.add(action);
+  return state;
 }
 
-class _MenuState extends State<Menu> {
-  List<JsonMenu?> tempMenu = [];
+class ListMenu extends StatelessWidget {
+  final ListIMenu menu;
+  const ListMenu({super.key, required this.menu});
+
   @override
   Widget build(BuildContext context) {
+    List<IMenu?>? listMenu = menu.menu;
     return ListView.builder(
-      itemCount: widget.menu!.length,
+      itemCount: listMenu!.length,
       itemBuilder: (context, index) {
-        return SizedBox(
-            width: double.infinity,
-            child: ListTile(
-              minLeadingWidth: 100,
-              trailing: const Icon(Icons.add),
-              title: Text(widget.menu![index]!.name!),
-              leading: Image.asset(
-                widget.menu![index]!.image!,
-                fit: BoxFit.contain,
-                alignment: Alignment.center,
+        return StoreConnector<List<IMenu>, IMenu?>(
+          converter: (store) {
+            return listMenu[index];
+          },
+          builder: (context, IMenu? stateMenu) {
+            return SizedBox(
+              width: double.infinity,
+              child: ListTile(
+                minLeadingWidth: 100,
+                trailing: const Icon(Icons.add),
+                title: Text(listMenu[index]!.name!),
+                leading: Image.asset(
+                  listMenu[index]!.image!,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
+                ),
+                subtitle: Text(
+                    "ราคา: ${NumberFormat("#,###").format(listMenu[index]!.price!)} บาท"),
+                onTap: () {
+                  StoreProvider.of<List<IMenu>>(context).dispatch(stateMenu);
+                },
               ),
-              subtitle: Text(
-                  "ราคา: ${NumberFormat("#,###").format(widget.menu![index]!.price!)} บาท"),
-              onTap: () => updateMenu(widget.menu![index]!),
-            ));
+            );
+          },
+        );
       },
     );
   }
-
-  updateMenu(JsonMenu menu) {
-    setState(() {
-      tempMenu.add(menu);
-    });
-  }
 }
 
-class InitMenu extends StatelessWidget {
-  const InitMenu({super.key});
+class Menu extends StatelessWidget {
+  const Menu({super.key});
 
   @override
   Widget build(BuildContext context) {
-    JsonIMenu? dataFromAPI;
+    ListIMenu? dataFromAPI;
 
-    Future<JsonIMenu?> getAPI() async {
+    Future<ListIMenu?> getAPI() async {
       String data = '''
                     {
                       "menu":[
@@ -77,70 +81,87 @@ class InitMenu extends StatelessWidget {
                 ''';
 
       Map<String, dynamic> map = jsonDecode(data);
-      dataFromAPI = JsonIMenu.fromJson(map);
+      dataFromAPI = ListIMenu.fromJson(map);
       return dataFromAPI;
     }
 
     return Row(
       children: [
         Expanded(
-            child: FutureBuilder(
-          future: getAPI(),
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              JsonIMenu result = snapshot.data;
-              return Menu(
-                menu: result.menu,
-              );
-            }
-            return const LinearProgressIndicator();
-          },
-        )),
-        ListMenu(
-          order: tempMenu,
-        )
+          child: FutureBuilder(
+            future: getAPI(),
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                ListIMenu result = snapshot.data;
+                return ListMenu(
+                  menu: result,
+                );
+              }
+              return const LinearProgressIndicator();
+            },
+          ),
+        ),
+        const TempMenu()
       ],
     );
   }
 }
 
-class ListMenu extends StatelessWidget {
-  final List<JsonMenu?> order;
-  const ListMenu({super.key, required this.order});
+class TempMenu extends StatelessWidget {
+  const TempMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeIn,
-      child: Container(
-        width: widthScreen,
-        decoration: BoxDecoration(color: Colors.grey.shade50, boxShadow: [
-          BoxShadow(
-              blurRadius: 5,
-              spreadRadius: 5,
-              color: Colors.grey.withOpacity(0.2))
-        ]),
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text(
-                "รายการ",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+    return StoreConnector<List<IMenu>, List<IMenu>>(
+      converter: (store) {
+        return store.state;
+      },
+      builder: (context, List<IMenu> tempMenu) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+          child: Container(
+            width: tempMenu.isNotEmpty ? widthScreen : 0,
+            decoration: BoxDecoration(color: Colors.grey.shade50, boxShadow: [
+              BoxShadow(
+                  blurRadius: 5,
+                  spreadRadius: 5,
+                  color: Colors.grey.withOpacity(0.2))
+            ]),
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Text(
+                    "รายการ",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
+                Expanded(
+                    child: ListView.builder(
+                  itemCount: tempMenu.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(tempMenu[index].name!),
+                      subtitle: Text(
+                          "ราคา: ${NumberFormat("#,###").format(tempMenu[index].price!)} บาท"),
+                    );
+                  },
+                )),
+                Container(
+                  height: 50,
+                  color: lightGreen,
+                  width: double.infinity,
+                  child: Text(""),
+                )
+              ],
             ),
-            Container(
-              height: 50,
-              color: lightGreen,
-              width: double.infinity,
-            )
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

@@ -3,7 +3,7 @@
 Map<String, dynamic> map = jsonDecode(<myJSONString>);
 var myRootNode = Root.fromJson(map);
 */
-class JsonMenu {
+class IMenu {
   String? name;
   String? description;
   int? price;
@@ -11,7 +11,7 @@ class JsonMenu {
   String? category;
   String? image;
 
-  JsonMenu(
+  IMenu(
       {this.name,
       this.description,
       this.price,
@@ -19,7 +19,7 @@ class JsonMenu {
       this.category,
       this.image});
 
-  JsonMenu.fromJson(Map<String, dynamic> json) {
+  IMenu.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     description = json['description'];
     price = json['price'];
@@ -40,16 +40,16 @@ class JsonMenu {
   }
 }
 
-class JsonIMenu {
-  List<JsonMenu?>? menu;
+class ListIMenu {
+  List<IMenu?>? menu;
 
-  JsonIMenu({this.menu});
+  ListIMenu({this.menu});
 
-  JsonIMenu.fromJson(Map<String, dynamic> json) {
+  ListIMenu.fromJson(Map<String, dynamic> json) {
     if (json['menu'] != null) {
-      menu = <JsonMenu>[];
+      menu = <IMenu>[];
       json['menu'].forEach((v) {
-        menu!.add(JsonMenu.fromJson(v));
+        menu!.add(IMenu.fromJson(v));
       });
     }
   }
