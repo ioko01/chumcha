@@ -13,14 +13,24 @@ var textSelectedThemePrimary = lightGreen;
 var textUnSelectedThemePrimary = Colors.grey;
 var textLight = Colors.white;
 
+// Define your State
+class AppState {
+  List<IMenu> addMenu;
+
+  AppState(this.addMenu);
+}
+
+AppState appReducer(AppState state, action) =>
+    AppState(menuReducer(state.addMenu, action));
+
 void main(List<String> args) {
-  final store = Store<List<IMenu>>(addMenu, initialState: []);
+  final store = Store<AppState>(appReducer, initialState: AppState([]));
   runApp(MyApp(title: "ฉ่ำชา @กุดป่อง", store: store));
 }
 
 class MyApp extends StatelessWidget {
   final String title;
-  final Store<List<IMenu>> store;
+  final Store<AppState> store;
   const MyApp({super.key, required this.title, required this.store});
 
   @override
