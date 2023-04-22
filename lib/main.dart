@@ -1,5 +1,5 @@
-import 'package:chumcha/json_parse/json_parse_menu.dart';
-import 'package:chumcha/pages/menu.dart';
+import 'package:chumcha/interfaces/interface_menu.dart';
+import 'package:chumcha/redux/menu_reducers.dart';
 import 'package:flutter/material.dart';
 import 'package:chumcha/configs/theme.dart';
 import 'package:chumcha/layout.dart';
@@ -15,16 +15,17 @@ var textLight = Colors.white;
 
 // Define your State
 class AppState {
-  List<IMenu> addMenu;
+  List<IMenu> menu;
+  bool tempMenu;
 
-  AppState(this.addMenu);
+  AppState(this.menu, this.tempMenu);
 }
 
-AppState appReducer(AppState state, action) =>
-    AppState(menuReducer(state.addMenu, action));
+AppState appReducer(AppState state, action) => AppState(
+    menuReducer(state.menu, action), tempMenuReducer(state.tempMenu, action));
 
 void main(List<String> args) {
-  final store = Store<AppState>(appReducer, initialState: AppState([]));
+  final store = Store<AppState>(appReducer, initialState: AppState([], false));
   runApp(MyApp(title: "ฉ่ำชา @กุดป่อง", store: store));
 }
 

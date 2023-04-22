@@ -1,22 +1,13 @@
 import 'dart:convert';
 
 import 'package:chumcha/main.dart';
+import 'package:chumcha/redux/menu_reducers.dart';
 import 'package:flutter/material.dart';
-import 'package:chumcha/json_parse/json_parse_menu.dart';
+import 'package:chumcha/interfaces/interface_menu.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:intl/intl.dart';
 
 double widthScreen = 150;
-
-List<IMenu> menuReducer(List<IMenu> state, dynamic action) {
-  if (action is IMenu?) {
-    state.add(action!);
-  }
-  if (action is int) {
-    state.removeAt(action);
-  }
-  return state;
-}
 
 class Menu extends StatelessWidget {
   const Menu({super.key});
@@ -84,7 +75,7 @@ class ListMenu extends StatelessWidget {
           converter: (store) {
             return listMenu[index];
           },
-          builder: (context, IMenu? stateMenu) {
+          builder: (context, IMenu? menu) {
             return SizedBox(
               width: double.infinity,
               child: ListTile(
@@ -93,18 +84,131 @@ class ListMenu extends StatelessWidget {
                 title: Text(listMenu[index]!.name!),
                 leading: Image.asset(
                   listMenu[index]!.image!,
-                  fit: BoxFit.contain,
+                  fit: BoxFit.cover,
                   alignment: Alignment.center,
+                  width: 100,
                 ),
                 subtitle: Text(
                     "ราคา: ${NumberFormat("#,###").format(listMenu[index]!.price!)} บาท"),
-                onTap: () =>
-                    StoreProvider.of<AppState>(context).dispatch(stateMenu),
+                onTap: () {
+                  StateActionMenu action =
+                      StateActionMenu(menu, MenuActions.increment);
+                  StoreProvider.of<AppState>(context).dispatch(action);
+                },
               ),
             );
           },
         );
       },
+    );
+  }
+}
+
+class TempMenuButton extends StatelessWidget {
+  final List<IMenu> tempMenu;
+  final bool isOpenTempMenu;
+  const TempMenuButton(
+      {super.key, required this.tempMenu, required this.isOpenTempMenu});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPositioned(
+      bottom: tempMenu.isNotEmpty && !isOpenTempMenu ? 20 : -100,
+      curve: Curves.easeIn,
+      duration: const Duration(milliseconds: 300),
+      width: MediaQuery.of(context).size.width,
+      child: FloatingActionButton(
+        backgroundColor: lightGreen,
+        foregroundColor: Colors.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.local_grocery_store_outlined),
+            Text(
+              "ตะกร้า",
+              style: TextStyle(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            )
+          ],
+        ),
+        onPressed: () {
+          StateActionMenu action = StateActionMenu(true, TempMenuActions.open);
+
+          StoreProvider.of<AppState>(context).dispatch(action);
+        },
+      ),
+    );
+  }
+}
+
+class TempMenuList extends StatelessWidget {
+  final List<IMenu> tempMenu;
+  final bool isOpenTempMenu;
+  const TempMenuList(
+      {super.key, required this.tempMenu, required this.isOpenTempMenu});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeIn,
+      width: MediaQuery.of(context).size.width,
+      bottom: tempMenu.isNotEmpty && isOpenTempMenu
+          ? 0
+          : -MediaQuery.of(context).size.height,
+      child: Column(
+        children: [
+          Container(
+            color: lightGreen,
+            width: double.infinity,
+            padding: const EdgeInsets.all(8),
+            child: const Text(
+              "รายการที่เลือกไว้",
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+          ),
+          SizedBox(
+            height: 200,
+            child: ListView.builder(
+              itemCount: tempMenu.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                    minLeadingWidth: 100,
+                    title: Text(tempMenu[index].name!),
+                    subtitle: Text(
+                        "ราคา: ${NumberFormat("#,###").format(tempMenu[index].price!)} บาท"),
+                    leading: Image.asset(
+                      tempMenu[index].image!,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                      width: 100,
+                    ),
+                    onTap: () {
+                      if (tempMenu.length == 1) {
+                        StateActionMenu action =
+                            StateActionMenu(false, TempMenuActions.close);
+
+                        StoreProvider.of<AppState>(context).dispatch(action);
+
+                        action = StateActionMenu(index, MenuActions.decrement);
+
+                        StoreProvider.of<AppState>(context).dispatch(action);
+                      } else {
+                        StateActionMenu action =
+                            StateActionMenu(index, MenuActions.decrement);
+
+                        StoreProvider.of<AppState>(context).dispatch(action);
+                      }
+                    });
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -116,49 +220,23 @@ class TempMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return StoreConnector<AppState, List<IMenu>>(
       converter: (store) {
-        return store.state.addMenu;
+        return store.state.menu;
       },
       builder: (context, List<IMenu> tempMenu) {
-        return AnimatedPositioned(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeIn,
-          width: MediaQuery.of(context).size.width,
-          top: tempMenu.isNotEmpty
-              ? MediaQuery.of(context).size.height - 350
-              : MediaQuery.of(context).size.height,
-          child: Column(
-            children: [
-              Container(
-                color: lightGreen,
-                width: double.infinity,
-                padding: const EdgeInsets.all(8),
-                child: const Text(
-                  "รายการ",
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+        return StoreConnector<AppState, bool>(
+          converter: (store) => store.state.tempMenu,
+          builder: (context, isOpenTempMenu) {
+            return Stack(
+              children: [
+                TempMenuList(
+                  tempMenu: tempMenu,
+                  isOpenTempMenu: isOpenTempMenu,
                 ),
-              ),
-              Container(
-                color: Colors.white,
-                height: 200,
-                child: ListView.builder(
-                  itemCount: tempMenu.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      minLeadingWidth: 100,
-                      title: Text(tempMenu[index].name!),
-                      subtitle: Text(
-                          "ราคา: ${NumberFormat("#,###").format(tempMenu[index].price!)} บาท"),
-                      onTap: () =>
-                          StoreProvider.of<AppState>(context).dispatch(index),
-                    );
-                  },
-                ),
-              )
-            ],
-          ),
+                TempMenuButton(
+                    tempMenu: tempMenu, isOpenTempMenu: isOpenTempMenu)
+              ],
+            );
+          },
         );
       },
     );
