@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:chumcha/interfaces/interface_menu.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:intl/intl.dart';
+import 'package:chumcha/widgets/modal.dart';
 
 double widthScreen = 150;
 
@@ -80,7 +81,6 @@ class ListMenu extends StatelessWidget {
               width: double.infinity,
               child: ListTile(
                 minLeadingWidth: 100,
-                trailing: const Icon(Icons.add),
                 title: Text(listMenu[index]!.name!),
                 leading: Image.asset(
                   listMenu[index]!.image!,
@@ -91,9 +91,9 @@ class ListMenu extends StatelessWidget {
                 subtitle: Text(
                     "ราคา: ${NumberFormat("#,###").format(listMenu[index]!.price!)} บาท"),
                 onTap: () {
-                  StateActionMenu action =
-                      StateActionMenu(menu, MenuActions.increment);
-                  StoreProvider.of<AppState>(context).dispatch(action);
+                  showModalCenterDialog(
+                      context, "ยืนยันรายการ",["ต้องการเพิ่มเมนู ","เพิ่มเมนู"], listMenu[index]);
+                  
                 },
               ),
             );
