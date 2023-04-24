@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:chumcha/interfaces/interface_menu.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:intl/intl.dart';
-import 'package:chumcha/widgets/modal.dart';
+import 'package:chumcha/widgets/modal_center_dialog.dart';
+import 'package:chumcha/widgets/modal_listview.dart';
 
 double widthScreen = 150;
 
@@ -92,8 +93,13 @@ class ListMenu extends StatelessWidget {
                     "ราคา: ${NumberFormat("#,###").format(listMenu[index]!.price!)} บาท"),
                 onTap: () {
                   showModalCenterDialog(
-                      context, "ยืนยันรายการ",["ต้องการเพิ่มเมนู ","เพิ่มเมนู"], listMenu[index]);
-                  
+                      context,
+                      "ยืนยันรายการ",
+                      ["ต้องการเพิ่มเมนู ", "เพิ่มเมนู"],
+                      listMenu[index],
+                      MenuActions.increment,
+                      index,
+                      [textLight, lightGreen]);
                 },
               ),
             );
@@ -133,6 +139,9 @@ class TempMenuButton extends StatelessWidget {
           ],
         ),
         onPressed: () {
+          // showModalListviewDialog(context, "รายการที่เลือก", [], tempMenu,
+          //     TempMenuActions.open, 0, null);
+
           StateActionMenu action = StateActionMenu(true, TempMenuActions.open);
 
           StoreProvider.of<AppState>(context).dispatch(action);
@@ -188,21 +197,14 @@ class TempMenuList extends StatelessWidget {
                       width: 100,
                     ),
                     onTap: () {
-                      if (tempMenu.length == 1) {
-                        StateActionMenu action =
-                            StateActionMenu(false, TempMenuActions.close);
-
-                        StoreProvider.of<AppState>(context).dispatch(action);
-
-                        action = StateActionMenu(index, MenuActions.decrement);
-
-                        StoreProvider.of<AppState>(context).dispatch(action);
-                      } else {
-                        StateActionMenu action =
-                            StateActionMenu(index, MenuActions.decrement);
-
-                        StoreProvider.of<AppState>(context).dispatch(action);
-                      }
+                      showModalCenterDialog(
+                          context,
+                          "ยืนยันรายการ",
+                          ["ต้องการลบ ", "ลบเมนู"],
+                          tempMenu[index],
+                          MenuActions.decrement,
+                          index,
+                          [textLight, Colors.red]);
                     });
               },
             ),

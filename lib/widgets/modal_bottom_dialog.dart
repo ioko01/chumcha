@@ -6,13 +6,19 @@ import 'package:flutter_redux/flutter_redux.dart';
 
 class ModalData extends StatelessWidget {
   final BuildContext context;
-  final dynamic title, content, data;
-  const ModalData(
-      {super.key,
-      required this.context,
-      required this.title,
-      this.content,
-      this.data});
+  final dynamic title, content, data, state;
+  final int index;
+  final List<Color>? color;
+  const ModalData({
+    super.key,
+    required this.context,
+    required this.title,
+    this.content,
+    this.data,
+    this.state,
+    this.index = 0,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +32,9 @@ class ModalData extends StatelessWidget {
           title: title,
           content: content,
           data: data,
+          state: state,
+          index: index,
+          color: color,
         );
       },
     );
@@ -34,13 +43,19 @@ class ModalData extends StatelessWidget {
 
 class ShowDialogData extends StatefulWidget {
   final BuildContext context;
-  final dynamic title, content, data;
-  const ShowDialogData(
-      {super.key,
-      required this.context,
-      required this.title,
-      this.content,
-      this.data});
+  final dynamic title, content, data, state;
+  final int? index;
+  final List<Color>? color;
+  const ShowDialogData({
+    super.key,
+    required this.context,
+    required this.title,
+    this.content,
+    this.data,
+    this.state,
+    this.index = 0,
+    this.color,
+  });
 
   @override
   State<ShowDialogData> createState() => _ShowDialogDataState();
@@ -49,6 +64,12 @@ class ShowDialogData extends StatefulWidget {
 class _ShowDialogDataState extends State<ShowDialogData> {
   @override
   Widget build(BuildContext context) {
+    var colorAction = Colors.white;
+    if (widget.state == MenuActions.increment) {
+      colorAction = lightGreen;
+    } else if (widget.state == MenuActions.decrement) {
+      colorAction = Colors.red;
+    }
     return StoreConnector<AppState, dynamic>(
       converter: (store) {
         return widget.data;
@@ -68,7 +89,7 @@ class _ShowDialogDataState extends State<ShowDialogData> {
                     children: [
                         TextSpan(
                           text: '"${data!.name}"',
-                          style: TextStyle(color: lightGreen),
+                          style: TextStyle(color: colorAction),
                         ),
                         const TextSpan(text: " หรือไม่?")
                       ])
@@ -82,15 +103,50 @@ class _ShowDialogDataState extends State<ShowDialogData> {
                     padding: const EdgeInsets.all(4),
                     child: ElevatedButton(
                       style: ButtonStyle(
-                        foregroundColor:
-                            getColor(lightGreen, textLight, textLight),
-                        backgroundColor:
-                            getColor(textLight, lightGreen, lightGreen),
+                        foregroundColor: widget.state == MenuActions.increment
+                            ? getColor(colorAction, textLight, textLight)
+                            : getColor(textLight, textLight, textLight),
+                        backgroundColor: widget.state == MenuActions.increment
+                            ? getColor(textLight, colorAction, colorAction)
+                            : getColor(colorAction, colorAction, colorAction),
                       ),
                       onPressed: () {
-                        StateActionMenu action =
-                            StateActionMenu(data, MenuActions.increment);
-                        StoreProvider.of<AppState>(context).dispatch(action);
+                        switch (widget.state) {
+                          case MenuActions.increment:
+                            StateActionMenu action =
+                                StateActionMenu(data, MenuActions.increment);
+                            StoreProvider.of<AppState>(context)
+                                .dispatch(action);
+                            break;
+
+                          case MenuActions.decrement:
+                            if (widget.index == 1) {
+                              StateActionMenu action =
+                                  StateActionMenu(false, TempMenuActions.close);
+
+                              StoreProvider.of<AppState>(context)
+                                  .dispatch(action);
+
+                              action = StateActionMenu(
+                                  widget.index, MenuActions.decrement);
+
+                              StoreProvider.of<AppState>(context)
+                                  .dispatch(action);
+                            } else {
+                              StateActionMenu action = StateActionMenu(
+                                  widget.index, MenuActions.decrement);
+
+                              StoreProvider.of<AppState>(context)
+                                  .dispatch(action);
+                            }
+                            break;
+
+                          default:
+                            StateActionMenu action =
+                                StateActionMenu(data, MenuActions.decrement);
+                            StoreProvider.of<AppState>(context)
+                                .dispatch(action);
+                        }
                         Navigator.of(context).pop();
                       },
                       child: widget.content[1].isNotEmpty
@@ -112,8 +168,8 @@ class _ShowDialogDataState extends State<ShowDialogData> {
                       style: ButtonStyle(
                           foregroundColor:
                               getColor(Colors.red, textLight, textLight),
-                          backgroundColor:
-                              getColor(textLight, Colors.red, Colors.red)),
+                          backgroundColor: getColor(textLight,
+                              Colors.grey.shade50, Colors.grey.shade50)),
                       child: const Text(
                         "ยกเลิก",
                         style: TextStyle(fontSize: 17),
@@ -145,7 +201,8 @@ class _ShowDialogDataState extends State<ShowDialogData> {
   }
 }
 
-void showModalCenterDialog(context, title, content, data) {
+void showModalBottomDialog(BuildContext context, title, content, data, state,
+    int index, List<Color>? color) {
   showGeneralDialog(
     context: context,
     pageBuilder: (context, animation, secondaryAnimation) {
@@ -153,13 +210,16 @@ void showModalCenterDialog(context, title, content, data) {
     },
     barrierDismissible: false,
     transitionBuilder: (ctx, animation, secondaryAnimation, child) {
-      return Transform.scale(
-        scale: animation.value,
+      return Transform.translate(
+        offset: Offset(0, -animation.value * 20),
         child: ModalData(
           context: ctx,
           title: title,
           content: content,
           data: data,
+          state: state,
+          index: index,
+          color: color,
         ),
       );
     },
