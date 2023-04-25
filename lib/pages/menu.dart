@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:chumcha/interfaces/interface_menu.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:intl/intl.dart';
-import 'package:chumcha/widgets/modal_center_dialog.dart';
+import 'package:chumcha/widgets/modal_dialog.dart';
 import 'package:chumcha/widgets/modal_listview.dart';
 
 double widthScreen = 150;
@@ -92,14 +92,14 @@ class ListMenu extends StatelessWidget {
                 subtitle: Text(
                     "ราคา: ${NumberFormat("#,###").format(listMenu[index]!.price!)} บาท"),
                 onTap: () {
-                  showModalCenterDialog(
-                      context,
-                      "ยืนยันรายการ",
-                      ["ต้องการเพิ่มเมนู ", "เพิ่มเมนู"],
-                      listMenu[index],
-                      MenuActions.increment,
-                      index,
-                      [textLight, lightGreen]);
+                  ShowGrowDialog(
+                      context: context,
+                      title: "ยืนยันรายการ",
+                      content: ["ต้องการเพิ่มเมนู ", "เพิ่มเมนู"],
+                      data: listMenu[index],
+                      action: MenuActions.increment,
+                      index: index,
+                      color: [textLight, lightGreen]).showModalGrowDialog();
                 },
               ),
             );
@@ -112,105 +112,50 @@ class ListMenu extends StatelessWidget {
 
 class TempMenuButton extends StatelessWidget {
   final List<IMenu> tempMenu;
-  final bool isOpenTempMenu;
-  const TempMenuButton(
-      {super.key, required this.tempMenu, required this.isOpenTempMenu});
+  const TempMenuButton({super.key, required this.tempMenu});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedPositioned(
-      bottom: tempMenu.isNotEmpty && !isOpenTempMenu ? 20 : -100,
-      curve: Curves.easeIn,
-      duration: const Duration(milliseconds: 300),
-      width: MediaQuery.of(context).size.width,
-      child: FloatingActionButton(
-        backgroundColor: lightGreen,
-        foregroundColor: Colors.white,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.local_grocery_store_outlined),
-            Text(
-              "ตะกร้า",
-              style: TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            )
-          ],
-        ),
-        onPressed: () {
-          // showModalListviewDialog(context, "รายการที่เลือก", [], tempMenu,
-          //     TempMenuActions.open, 0, null);
-
-          StateActionMenu action = StateActionMenu(true, TempMenuActions.open);
-
-          StoreProvider.of<AppState>(context).dispatch(action);
-        },
-      ),
-    );
-  }
-}
-
-class TempMenuList extends StatelessWidget {
-  final List<IMenu> tempMenu;
-  final bool isOpenTempMenu;
-  const TempMenuList(
-      {super.key, required this.tempMenu, required this.isOpenTempMenu});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeIn,
-      width: MediaQuery.of(context).size.width,
-      bottom: tempMenu.isNotEmpty && isOpenTempMenu
-          ? 0
-          : -MediaQuery.of(context).size.height,
-      child: Column(
-        children: [
-          Container(
-            color: lightGreen,
-            width: double.infinity,
-            padding: const EdgeInsets.all(8),
-            child: const Text(
-              "รายการที่เลือกไว้",
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+    return StoreConnector<AppState, bool>(
+      converter: (store) {
+        return store.state.tempMenu;
+      },
+      builder: (context, isOpenTempMenu) {
+        return AnimatedPositioned(
+          bottom: tempMenu.isNotEmpty && !isOpenTempMenu ? 20 : -100,
+          curve: Curves.easeIn,
+          right: 20,
+          duration: const Duration(milliseconds: 300),
+          child: FloatingActionButton(
+            backgroundColor: lightGreen,
+            foregroundColor: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.local_grocery_store_outlined),
+                Text(
+                  "ตะกร้า",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                )
+              ],
             ),
+            onPressed: () {
+              StoreProvider.of<AppState>(context)
+                  .dispatch(StateActionMenu(true, TempMenuActions.open));
+
+              ShowGrowDialogListView(
+                context: context,
+                title: "รายการที่เลือกไว้",
+                content: [],
+                data: tempMenu,
+                action: TempMenuActions.open,
+              ).showModalGrowDialogListView();
+            },
           ),
-          SizedBox(
-            height: 200,
-            child: ListView.builder(
-              itemCount: tempMenu.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                    minLeadingWidth: 100,
-                    title: Text(tempMenu[index].name!),
-                    subtitle: Text(
-                        "ราคา: ${NumberFormat("#,###").format(tempMenu[index].price!)} บาท"),
-                    leading: Image.asset(
-                      tempMenu[index].image!,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                      width: 100,
-                    ),
-                    onTap: () {
-                      showModalCenterDialog(
-                          context,
-                          "ยืนยันรายการ",
-                          ["ต้องการลบ ", "ลบเมนู"],
-                          tempMenu[index],
-                          MenuActions.decrement,
-                          index,
-                          [textLight, Colors.red]);
-                    });
-              },
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -225,21 +170,7 @@ class TempMenu extends StatelessWidget {
         return store.state.menu;
       },
       builder: (context, List<IMenu> tempMenu) {
-        return StoreConnector<AppState, bool>(
-          converter: (store) => store.state.tempMenu,
-          builder: (context, isOpenTempMenu) {
-            return Stack(
-              children: [
-                TempMenuList(
-                  tempMenu: tempMenu,
-                  isOpenTempMenu: isOpenTempMenu,
-                ),
-                TempMenuButton(
-                    tempMenu: tempMenu, isOpenTempMenu: isOpenTempMenu)
-              ],
-            );
-          },
-        );
+        return TempMenuButton(tempMenu: tempMenu);
       },
     );
   }

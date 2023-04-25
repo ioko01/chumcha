@@ -1,10 +1,8 @@
 import 'package:chumcha/interfaces/interface_menu.dart';
 import 'package:chumcha/main.dart';
 import 'package:chumcha/redux/menu_reducers.dart';
-import 'package:chumcha/widgets/modal_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:intl/intl.dart';
 
 class ModalData extends StatelessWidget {
   final BuildContext context;
@@ -63,68 +61,31 @@ class ShowDialogData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var colorAction = Colors.white;
+    if (action == MenuActions.increment) {
+      colorAction = lightGreen;
+    } else if (action == MenuActions.decrement) {
+      colorAction = Colors.red;
+    }
     return AlertDialog(
       title: Text(
         title,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: data.length,
-          itemBuilder: (context, index) {
-            return SizedBox(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      content: RichText(
+        text: content[0].isNotEmpty
+            ? TextSpan(
+                text: content[0],
+                style: const TextStyle(
+                    color: Colors.black, fontFamily: "FC Minimal"),
                 children: [
-                  Column(
-                    children: [
-                      Image.asset(
-                        data[index].image,
-                        fit: BoxFit.cover,
-                        width: 60,
-                      ),
-                      Text(
-                        data[index].name,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      Text(
-                        "ราคา: ${NumberFormat("#,###").format(data[index].price)} บาท",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                        iconSize: const MaterialStatePropertyAll(20),
-                        backgroundColor:
-                            const MaterialStatePropertyAll(Colors.transparent),
-                        foregroundColor: getColor(Colors.red.shade300,
-                            Colors.red.shade500, Colors.red.shade600),
-                        shadowColor:
-                            const MaterialStatePropertyAll(Colors.transparent),
-                        overlayColor:
-                            const MaterialStatePropertyAll(Colors.transparent)),
-                    onPressed: () {
-                      ShowGrowDialog(
-                          context: context,
-                          title: "ยืนยันรายการ",
-                          content: ["ต้องการลบ ", "ลบเมนู"],
-                          data: data[index],
-                          action: MenuActions.decrement,
-                          index: index,
-                          color: [textLight, Colors.red]).showModalGrowDialog();
-                    },
-                    child: const Icon(Icons.delete),
-                  )
-                ],
-              ),
-            );
-          },
-        ),
+                    TextSpan(
+                      text: '"${data!.name}"',
+                      style: TextStyle(color: colorAction),
+                    ),
+                    const TextSpan(text: " หรือไม่?")
+                  ])
+            : const TextSpan(text: ""),
       ),
       actions: <Widget>[
         Row(
@@ -134,14 +95,52 @@ class ShowDialogData extends StatelessWidget {
                 padding: const EdgeInsets.all(4),
                 child: ElevatedButton(
                   style: ButtonStyle(
-                    foregroundColor: getColor(textLight, textLight, textLight),
-                    backgroundColor:
-                        getColor(lightGreen, lightGreen, lightGreen),
+                    foregroundColor: action == MenuActions.increment
+                        ? getColor(colorAction, textLight, textLight)
+                        : getColor(textLight, textLight, textLight),
+                    backgroundColor: action == MenuActions.increment
+                        ? getColor(textLight, colorAction, colorAction)
+                        : getColor(colorAction, colorAction, colorAction),
                   ),
                   onPressed: () {
+                    switch (action) {
+                      case MenuActions.increment:
+                        StoreProvider.of<AppState>(context).dispatch(
+                            StateActionMenu(data, MenuActions.increment));
+
+                        StoreProvider.of<AppState>(context).dispatch(
+                            StateActionMenu(false, TempMenuActions.close));
+                        break;
+
+                      case MenuActions.decrement:
+                        if (index == 0) {
+                          StoreProvider.of<AppState>(context).dispatch(
+                              StateActionMenu(false, TempMenuActions.close));
+
+                          StoreProvider.of<AppState>(context).dispatch(
+                              StateActionMenu(index, MenuActions.decrement));
+                          Navigator.of(context).pop();
+                        } else {
+                          StoreProvider.of<AppState>(context).dispatch(
+                              StateActionMenu(true, TempMenuActions.open));
+
+                          StoreProvider.of<AppState>(context).dispatch(
+                              StateActionMenu(index, MenuActions.decrement));
+                        }
+                        break;
+
+                      default:
+                        StoreProvider.of<AppState>(context).dispatch(
+                            StateActionMenu(data, MenuActions.decrement));
+                    }
                     Navigator.of(context).pop();
                   },
-                  child: const Text("บันทึกรายการ"),
+                  child: content[1].isNotEmpty
+                      ? Text(
+                          content[1],
+                          style: const TextStyle(fontSize: 17),
+                        )
+                      : const Text(""),
                 ),
               ),
             ),
@@ -150,10 +149,11 @@ class ShowDialogData extends StatelessWidget {
                 padding: const EdgeInsets.all(4),
                 child: ElevatedButton(
                   onPressed: () {
-                    StateActionMenu action =
-                        StateActionMenu(false, TempMenuActions.close);
-
-                    StoreProvider.of<AppState>(context).dispatch(action);
+                    if (action == MenuActions.increment) {
+                      StateActionMenu action =
+                          StateActionMenu(false, TempMenuActions.close);
+                      StoreProvider.of<AppState>(context).dispatch(action);
+                    }
                     Navigator.of(context).pop();
                   },
                   style: ButtonStyle(
@@ -162,7 +162,7 @@ class ShowDialogData extends StatelessWidget {
                       backgroundColor: getColor(
                           textLight, Colors.grey.shade50, Colors.grey.shade50)),
                   child: const Text(
-                    "ปิด",
+                    "ยกเลิก",
                     style: TextStyle(fontSize: 17),
                   ),
                 ),
@@ -188,30 +188,15 @@ class ShowDialogData extends StatelessWidget {
 
     return MaterialStateProperty.resolveWith(getColor);
   }
-
-  MaterialStateProperty<TextStyle> getText(
-      TextStyle text, TextStyle textHovered, TextStyle textPressed) {
-    TextStyle getText(Set<MaterialState> state) {
-      if (state.contains(MaterialState.pressed)) {
-        return textPressed;
-      } else if (state.contains(MaterialState.hovered)) {
-        return textHovered;
-      } else {
-        return text;
-      }
-    }
-
-    return MaterialStateProperty.resolveWith(getText);
-  }
 }
 
-class ShowGrowDialogListView {
+class ShowGrowDialog {
   final BuildContext context;
   final String title;
   final dynamic content, data, action;
   final int? index;
   final List<Color>? color;
-  const ShowGrowDialogListView({
+  const ShowGrowDialog({
     required this.context,
     required this.title,
     this.content,
@@ -221,7 +206,7 @@ class ShowGrowDialogListView {
     this.color,
   });
 
-  showModalGrowDialogListView() {
+  showModalGrowDialog() {
     showGeneralDialog(
       context: context,
       pageBuilder: (context, animation, secondaryAnimation) {
