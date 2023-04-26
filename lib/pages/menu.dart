@@ -30,7 +30,7 @@ class Menu extends StatelessWidget {
                           },
                           {
                             "name":"ชาไทยนมเหนียว",
-                            "price":50,
+                            "price":100,
                             "category":"นมเหนียว",
                             "image":"assets/images/2.jpg"
                           }

@@ -2,9 +2,11 @@ import 'package:chumcha/interfaces/interface_menu.dart';
 import 'package:chumcha/main.dart';
 import 'package:chumcha/redux/menu_reducers.dart';
 import 'package:chumcha/widgets/modal_dialog.dart';
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:intl/intl.dart';
+import 'dart:math' as math;
 
 class ModalData extends StatelessWidget {
   final BuildContext context;
@@ -44,6 +46,10 @@ class ModalData extends StatelessWidget {
   }
 }
 
+class MenuAmount extends IMenu {
+  int? amount;
+}
+
 class ShowDialogData extends StatelessWidget {
   final BuildContext context;
   final String title;
@@ -63,6 +69,19 @@ class ShowDialogData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Map<String, Map<String, int>> countMap =
+        HashMap<String, Map<String, int>>();
+
+    for (int i = 0; i < data.length; i++) {
+      countMap.addAll({
+        data[i].name!: {
+          "price": data[i].price!,
+          "amount": (countMap[data[i].name]?.values.elementAt(1) ?? 0) + 1,
+          "index": i
+        }
+      });
+    }
+
     return AlertDialog(
       title: Text(
         title,
@@ -70,60 +89,156 @@ class ShowDialogData extends StatelessWidget {
       ),
       content: SizedBox(
         width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: data.length,
-          itemBuilder: (context, index) {
-            return SizedBox(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: countMap.length,
+              itemBuilder: (context, index) {
+                return SizedBox(
+                  child: Column(
                     children: [
-                      Image.asset(
-                        data[index].image,
-                        fit: BoxFit.cover,
-                        width: 60,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                countMap.keys.elementAt(index),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "ราคา: ${countMap.values.elementAt(index).values.elementAt(0)} บาท",
+                                textAlign: TextAlign.start,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              ElevatedButton(
+                                style: const ButtonStyle(
+                                  shape: MaterialStatePropertyAll(CircleBorder(
+                                      side: BorderSide(color: Colors.black))),
+                                  padding: MaterialStatePropertyAll(
+                                      EdgeInsets.all(10)),
+                                  iconSize: MaterialStatePropertyAll(25),
+                                  backgroundColor: MaterialStatePropertyAll(
+                                      Colors.transparent),
+                                  foregroundColor:
+                                      MaterialStatePropertyAll(Colors.black),
+                                  shadowColor: MaterialStatePropertyAll(
+                                      Colors.transparent),
+                                ),
+                                onPressed: () {
+                                  if (countMap.values
+                                          .elementAt(index)
+                                          .values
+                                          .elementAt(1) ==
+                                      1) {
+                                    ShowGrowDialog(
+                                        context: context,
+                                        title: "ยืนยันรายการ",
+                                        content: ["ต้องการลบเมนู ", "ลบเมนู"],
+                                        data: data[countMap.values
+                                            .elementAt(index)
+                                            .values
+                                            .elementAt(2)],
+                                        action: MenuActions.decrement,
+                                        index: countMap.values
+                                            .elementAt(index)
+                                            .values
+                                            .elementAt(2),
+                                        length: data.length,
+                                        color: [
+                                          Colors.red,
+                                          textLight
+                                        ]).showModalGrowDialog();
+                                  } else {
+                                    StoreProvider.of<AppState>(context)
+                                        .dispatch(StateActionMenu(
+                                            countMap.values
+                                                .elementAt(index)
+                                                .values
+                                                .elementAt(2),
+                                            MenuActions.decrement));
+                                  }
+                                },
+                                child: const Icon(Icons.remove),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(0, 16, 0, 16),
+                                child: Text(
+                                  "${countMap.values.elementAt(index).values.elementAt(1)}",
+                                  style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: const ButtonStyle(
+                                  shape: MaterialStatePropertyAll(CircleBorder(
+                                      side: BorderSide(color: Colors.black))),
+                                  padding: MaterialStatePropertyAll(
+                                      EdgeInsets.all(10)),
+                                  iconSize: MaterialStatePropertyAll(25),
+                                  backgroundColor: MaterialStatePropertyAll(
+                                      Colors.transparent),
+                                  foregroundColor:
+                                      MaterialStatePropertyAll(Colors.black),
+                                  shadowColor: MaterialStatePropertyAll(
+                                      Colors.transparent),
+                                ),
+                                onPressed: () {
+                                  ShowGrowDialog(
+                                          context: context,
+                                          title: "ยืนยันรายการ",
+                                          content: [
+                                            "ต้องการเพิ่มเมนู ",
+                                            "เพิ่มเมนู"
+                                          ],
+                                          data: data[countMap.values
+                                              .elementAt(index)
+                                              .values
+                                              .elementAt(2)],
+                                          action: MenuActions.increment,
+                                          index: countMap.values
+                                              .elementAt(index)
+                                              .values
+                                              .elementAt(2),
+                                          color: [textLight, lightGreen])
+                                      .showModalGrowDialog();
+                                },
+                                child: const Icon(Icons.add),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      Text(
-                        data[index].name,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      Text(
-                        "ราคา: ${NumberFormat("#,###").format(data[index].price)} บาท",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                            border: Border(
+                                bottom: BorderSide(
+                                    color: Colors.black.withOpacity(0.1)))),
+                      )
                     ],
                   ),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                        iconSize: const MaterialStatePropertyAll(20),
-                        backgroundColor:
-                            const MaterialStatePropertyAll(Colors.transparent),
-                        foregroundColor: getColor(Colors.red.shade300,
-                            Colors.red.shade500, Colors.red.shade600),
-                        shadowColor:
-                            const MaterialStatePropertyAll(Colors.transparent),
-                        overlayColor:
-                            const MaterialStatePropertyAll(Colors.transparent)),
-                    onPressed: () {
-                      ShowGrowDialog(
-                          context: context,
-                          title: "ยืนยันรายการ",
-                          content: ["ต้องการลบ ", "ลบเมนู"],
-                          data: data[index],
-                          action: MenuActions.decrement,
-                          index: index,
-                          color: [textLight, Colors.red]).showModalGrowDialog();
-                    },
-                    child: const Icon(Icons.delete),
-                  )
-                ],
-              ),
-            );
-          },
+                );
+              },
+            ),
+            Text(
+              "รวม",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            )
+          ],
         ),
       ),
       actions: <Widget>[

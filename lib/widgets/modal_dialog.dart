@@ -9,6 +9,7 @@ class ModalData extends StatelessWidget {
   final String title;
   final dynamic content, data, action;
   final int index;
+  final int? length;
   final List<Color>? color;
   const ModalData({
     super.key,
@@ -18,6 +19,7 @@ class ModalData extends StatelessWidget {
     this.data,
     this.action,
     this.index = 0,
+    this.length = 0,
     this.color,
   });
 
@@ -35,6 +37,7 @@ class ModalData extends StatelessWidget {
           data: data,
           action: action,
           index: index,
+          length: length,
           color: color,
         );
       },
@@ -47,6 +50,7 @@ class ShowDialogData extends StatelessWidget {
   final String title;
   final dynamic content, data, action;
   final int? index;
+  final int? length;
   final List<Color>? color;
   const ShowDialogData({
     super.key,
@@ -56,6 +60,7 @@ class ShowDialogData extends StatelessWidget {
     this.data,
     this.action,
     this.index = 0,
+    this.length = 0,
     this.color,
   });
 
@@ -113,7 +118,7 @@ class ShowDialogData extends StatelessWidget {
                         break;
 
                       case MenuActions.decrement:
-                        if (index == 0) {
+                        if (length == 1) {
                           StoreProvider.of<AppState>(context).dispatch(
                               StateActionMenu(false, TempMenuActions.close));
 
@@ -195,6 +200,7 @@ class ShowGrowDialog {
   final String title;
   final dynamic content, data, action;
   final int? index;
+  final int? length;
   final List<Color>? color;
   const ShowGrowDialog({
     required this.context,
@@ -203,6 +209,7 @@ class ShowGrowDialog {
     this.data,
     this.action,
     this.index = 0,
+    this.length = 0,
     this.color,
   });
 
@@ -223,6 +230,7 @@ class ShowGrowDialog {
             data: data,
             action: action,
             index: index!,
+            length: length,
             color: color,
           ),
         );
