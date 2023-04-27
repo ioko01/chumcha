@@ -128,11 +128,9 @@ class ShowDialogData extends StatelessWidget {
                               ),
                               iconSize: MaterialStatePropertyAll(20),
                               backgroundColor:
-                                  MaterialStatePropertyAll(Colors.transparent),
+                                  MaterialStatePropertyAll(Colors.white),
                               foregroundColor:
                                   MaterialStatePropertyAll(Colors.black),
-                              shadowColor:
-                                  MaterialStatePropertyAll(Colors.transparent),
                             ),
                             onPressed: () {
                               if (countMap.values
@@ -185,11 +183,9 @@ class ShowDialogData extends StatelessWidget {
                               ),
                               iconSize: MaterialStatePropertyAll(20),
                               backgroundColor:
-                                  MaterialStatePropertyAll(Colors.transparent),
+                                  MaterialStatePropertyAll(Colors.white),
                               foregroundColor:
                                   MaterialStatePropertyAll(Colors.black),
-                              shadowColor:
-                                  MaterialStatePropertyAll(Colors.transparent),
                             ),
                             onPressed: () {
                               ShowGrowDialog(
@@ -267,8 +263,13 @@ class ShowDialogData extends StatelessWidget {
                                 getColor(lightGreen, lightGreen, lightGreen),
                           ),
                           onPressed: () {
-                            confirmMenu(tempMenu)
-                                .then((value) => Navigator.of(context).pop());
+                            confirmMenu(tempMenu).then((value) {
+                              Navigator.of(context).pop();
+                              StateActionMenu action =
+                                  StateActionMenu([], MenuActions.reset);
+                              StoreProvider.of<AppState>(context)
+                                  .dispatch(action);
+                            });
                           },
                           child: const Text("บันทึกรายการ"),
                         ),

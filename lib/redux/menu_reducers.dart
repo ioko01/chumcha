@@ -1,6 +1,6 @@
 import 'package:chumcha/interfaces/interface_menu.dart';
 
-enum MenuActions { increment, decrement }
+enum MenuActions { increment, decrement, reset }
 
 enum TempMenuActions { open, close }
 
@@ -10,6 +10,9 @@ List<IMenu> menuReducer(List<IMenu> state, dynamic action) {
   }
   if (action.action == MenuActions.decrement) {
     state.removeAt(action.state);
+  }
+  if (action.action == MenuActions.reset) {
+    state.clear();
   }
   return state;
 }
