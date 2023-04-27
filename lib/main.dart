@@ -12,6 +12,7 @@ var backgroundThemePrimaryLightMaterial = Colors.lightGreen;
 var textSelectedThemePrimary = lightGreen;
 var textUnSelectedThemePrimary = Colors.grey;
 var textLight = Colors.white;
+String fontFamily = "FC Minimal";
 
 // Define your State
 class AppState {

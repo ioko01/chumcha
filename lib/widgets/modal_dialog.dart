@@ -81,8 +81,7 @@ class ShowDialogData extends StatelessWidget {
         text: content[0].isNotEmpty
             ? TextSpan(
                 text: content[0],
-                style: const TextStyle(
-                    color: Colors.black, fontFamily: "FC Minimal"),
+                style: TextStyle(color: Colors.black, fontFamily: fontFamily),
                 children: [
                     TextSpan(
                       text: '"${data!.name}"',

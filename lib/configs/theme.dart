@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:chumcha/main.dart';
 
 var themePrimaryData = ThemeData(
-  fontFamily: "FC Minimal",
+  fontFamily: fontFamily,
   primarySwatch: backgroundThemePrimaryLightMaterial,
 );
 

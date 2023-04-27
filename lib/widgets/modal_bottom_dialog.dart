@@ -84,8 +84,8 @@ class _ShowDialogDataState extends State<ShowDialogData> {
             text: widget.content[0].isNotEmpty
                 ? TextSpan(
                     text: widget.content[0],
-                    style: const TextStyle(
-                        color: Colors.black, fontFamily: "FC Minimal"),
+                    style:
+                        TextStyle(color: Colors.black, fontFamily: fontFamily),
                     children: [
                         TextSpan(
                           text: '"${data!.name}"',
