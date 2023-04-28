@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:chumcha/api/menu.dart';
 import 'package:chumcha/interfaces/interface_menu.dart';
 import 'package:chumcha/main.dart';
@@ -7,6 +9,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:intl/intl.dart';
+import 'package:chumcha/interfaces/interface_error.dart';
 
 class ModalData extends StatelessWidget {
   final BuildContext context;
@@ -50,7 +53,7 @@ class MenuAmount extends IMenu {
   int? amount;
 }
 
-class ShowDialogData extends StatelessWidget {
+class ShowDialogData extends StatefulWidget {
   final BuildContext context;
   final String title;
   final dynamic content, data, action;
@@ -68,15 +71,24 @@ class ShowDialogData extends StatelessWidget {
   });
 
   @override
+  State<ShowDialogData> createState() => _ShowDialogDataState();
+}
+
+class _ShowDialogDataState extends State<ShowDialogData> {
+  bool isSaveBill = false;
+  String? errorMessage;
+
+  @override
   Widget build(BuildContext context) {
     Map<String, Map<String, int>> countMap =
         HashMap<String, Map<String, int>>();
 
-    for (int i = 0; i < data.length; i++) {
+    for (int i = 0; i < widget.data.length; i++) {
       countMap.addAll({
-        data[i].name!: {
-          "price": data[i].price!,
-          "amount": (countMap[data[i].name]?.values.elementAt(1) ?? 0) + 1,
+        widget.data[i].name!: {
+          "price": widget.data[i].price!,
+          "amount":
+              (countMap[widget.data[i].name]?.values.elementAt(1) ?? 0) + 1,
           "index": i
         }
       });
@@ -84,7 +96,7 @@ class ShowDialogData extends StatelessWidget {
 
     return AlertDialog(
       title: Text(
-        title,
+        widget.title,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       content: SizedBox(
@@ -142,7 +154,7 @@ class ShowDialogData extends StatelessWidget {
                                         context: context,
                                         title: "ยืนยันรายการ",
                                         content: ["ต้องการลบเมนู ", "ลบเมนู"],
-                                        data: data[countMap.values
+                                        data: widget.data[countMap.values
                                             .elementAt(index)
                                             .values
                                             .elementAt(2)],
@@ -151,17 +163,18 @@ class ShowDialogData extends StatelessWidget {
                                             .elementAt(index)
                                             .values
                                             .elementAt(2),
-                                        length: data.length,
+                                        length: widget.data.length,
                                         color: [Colors.red, textLight])
                                     .showModalGrowDialog();
                               } else {
                                 StoreProvider.of<AppState>(context).dispatch(
-                                    StateActionMenu(
-                                        countMap.values
-                                            .elementAt(index)
-                                            .values
-                                            .elementAt(2),
-                                        MenuActions.decrement));
+                                  StateActionMenu(
+                                      countMap.values
+                                          .elementAt(index)
+                                          .values
+                                          .elementAt(2),
+                                      MenuActions.decrement),
+                                );
                               }
                             },
                             child: const Icon(Icons.remove),
@@ -192,7 +205,7 @@ class ShowDialogData extends StatelessWidget {
                                   context: context,
                                   title: "ยืนยันรายการ",
                                   content: ["ต้องการเพิ่มเมนู ", "เพิ่มเมนู"],
-                                  data: data[countMap.values
+                                  data: widget.data[countMap.values
                                       .elementAt(index)
                                       .values
                                       .elementAt(2)],
@@ -214,9 +227,12 @@ class ShowDialogData extends StatelessWidget {
                   ),
                   Container(
                     decoration: BoxDecoration(
-                        border: Border(
-                            bottom: BorderSide(
-                                color: Colors.black.withOpacity(0.1)))),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.black.withOpacity(0.1),
+                        ),
+                      ),
+                    ),
                   )
                 ],
               ),
@@ -259,19 +275,60 @@ class ShowDialogData extends StatelessWidget {
                           style: ButtonStyle(
                             foregroundColor:
                                 getColor(textLight, textLight, textLight),
-                            backgroundColor:
-                                getColor(lightGreen, lightGreen, lightGreen),
+                            backgroundColor: !isSaveBill
+                                ? MaterialStatePropertyAll(lightGreen)
+                                : MaterialStatePropertyAll(
+                                    Colors.grey.withOpacity(0.5),
+                                  ),
+                            shadowColor: const MaterialStatePropertyAll(
+                                Colors.transparent),
                           ),
                           onPressed: () {
-                            confirmMenu(tempMenu).then((value) {
-                              Navigator.of(context).pop();
-                              StateActionMenu action =
-                                  StateActionMenu([], MenuActions.reset);
-                              StoreProvider.of<AppState>(context)
-                                  .dispatch(action);
-                            });
+                            errorMessage = "";
+                            setState(
+                              () {
+                                isSaveBill = true;
+                              },
+                            );
+                            if (isSaveBill) {
+                              confirmMenu(tempMenu).then(
+                                (value) {
+                                  if (value.contains("errorMessage")) {
+                                    Map<String, dynamic> map =
+                                        jsonDecode(value);
+                                    var myErrorMessageNode =
+                                        ErrorMessage.fromJson(map);
+                                    if (myErrorMessageNode.errorMessage != "") {
+                                      setState(() {
+                                        errorMessage =
+                                            myErrorMessageNode.errorMessage;
+                                      });
+                                    }
+                                  } else {
+                                    StateActionMenu action =
+                                        StateActionMenu([], MenuActions.reset);
+                                    StoreProvider.of<AppState>(context)
+                                        .dispatch(action);
+                                    Navigator.of(context).pop();
+                                  }
+
+                                  setState(() {
+                                    isSaveBill = false;
+                                  });
+                                },
+                              );
+                            }
                           },
-                          child: const Text("บันทึกรายการ"),
+                          child: !isSaveBill
+                              ? const Text("บันทึกรายการ")
+                              : SizedBox(
+                                  width: 10,
+                                  height: 10,
+                                  child: CircularProgressIndicator(
+                                    color: textLight,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
                         ),
                       );
                     },
@@ -289,10 +346,11 @@ class ShowDialogData extends StatelessWidget {
                         Navigator.of(context).pop();
                       },
                       style: ButtonStyle(
-                          foregroundColor:
-                              getColor(Colors.red, textLight, textLight),
-                          backgroundColor: getColor(textLight,
-                              Colors.grey.shade50, Colors.grey.shade50)),
+                        foregroundColor:
+                            getColor(Colors.red, textLight, textLight),
+                        backgroundColor: getColor(textLight,
+                            Colors.grey.shade50, Colors.grey.shade50),
+                      ),
                       child: const Text(
                         "ปิด",
                         style: TextStyle(fontSize: 17),
@@ -302,6 +360,10 @@ class ShowDialogData extends StatelessWidget {
                 ),
               ],
             ),
+            Text(
+              errorMessage ?? "",
+              style: const TextStyle(color: Colors.red),
+            )
           ],
         ),
       ],

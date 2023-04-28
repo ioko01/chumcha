@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:chumcha/api/menu.dart';
 import 'package:chumcha/main.dart';
 import 'package:chumcha/redux/menu_reducers.dart';
 import 'package:flutter/material.dart';
@@ -16,42 +17,24 @@ class Menu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ListIMenu? dataFromAPI;
-
-    Future<ListIMenu?> getAPI() async {
-      String data = '''
-                    {
-                      "menu":[
-                          {
-                            "name":"โกโก้นมเหนียว",
-                            "price":50,
-                            "category":"นมเหนียว",
-                            "image":"assets/images/1.jpg"
-                          },
-                          {
-                            "name":"ชาไทยนมเหนียว",
-                            "price":100,
-                            "category":"นมเหนียว",
-                            "image":"assets/images/2.jpg"
-                          }
-                      ]
-                    }
-                ''';
-
-      Map<String, dynamic> map = jsonDecode(data);
-      dataFromAPI = ListIMenu.fromJson(map);
-      return dataFromAPI;
-    }
-
     return Stack(
       children: [
-        FutureBuilder(
-          future: getAPI(),
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        FutureBuilder<String>(
+          future: getMenu(),
+          builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              ListIMenu result = snapshot.data;
+              String data = snapshot.data.toString();
+              final List<IMenu>? menu;
+              if (data.contains("errorMessage")) {
+                menu = [];
+              } else {
+                menu = List.from(json.decode(data))
+                    .map((json) => IMenu.fromJson(json))
+                    .toList();
+              }
+
               return ListMenu(
-                menu: result,
+                menu: menu,
               );
             }
             return const LinearProgressIndicator();
@@ -64,49 +47,82 @@ class Menu extends StatelessWidget {
 }
 
 class ListMenu extends StatelessWidget {
-  final ListIMenu menu;
+  final List<IMenu> menu;
   const ListMenu({super.key, required this.menu});
 
   @override
   Widget build(BuildContext context) {
-    List<IMenu?>? listMenu = menu.menu;
-    return ListView.builder(
-      itemCount: listMenu!.length,
-      itemBuilder: (context, index) {
-        return StoreConnector<AppState, IMenu?>(
-          converter: (store) {
-            return listMenu[index];
-          },
-          builder: (context, IMenu? menu) {
-            return SizedBox(
+    if (menu.isEmpty) {
+      return Container(
+        padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
+        width: double.maxFinite,
+        child: const Text(
+          "ไม่มีข้อมูลหรืออาจมีบางอย่างผิดพลาด กรุณาลองใหม่อีกครั้ง",
+          style: TextStyle(color: Colors.grey),
+          textAlign: TextAlign.center,
+        ),
+      );
+    } else {
+      return ListView.builder(
+        shrinkWrap: true,
+        itemCount: menu.length,
+        itemBuilder: (context, index) {
+          final btnColor = index % 2 == 0 ? Colors.grey.shade100 : Colors.white;
+          return SizedBox(
               width: double.infinity,
-              child: ListTile(
-                minLeadingWidth: 100,
-                title: Text(listMenu[index]!.name!),
-                leading: Image.asset(
-                  listMenu[index]!.image!,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
-                  width: 100,
-                ),
-                subtitle: Text(
-                    "ราคา: ${NumberFormat("#,###").format(listMenu[index]!.price!)} บาท"),
-                onTap: () {
+              child: ElevatedButton(
+                onPressed: () {
                   ShowGrowDialog(
                       context: context,
                       title: "ยืนยันรายการ",
                       content: ["ต้องการเพิ่มเมนู ", "เพิ่มเมนู"],
-                      data: listMenu[index],
+                      data: menu[index],
                       action: MenuActions.increment,
                       index: index,
                       color: [textLight, lightGreen]).showModalGrowDialog();
                 },
-              ),
-            );
-          },
-        );
-      },
-    );
+                style: ButtonStyle(
+                  backgroundColor: MaterialStatePropertyAll(btnColor),
+                  shape: const MaterialStatePropertyAll(
+                    BeveledRectangleBorder(borderRadius: BorderRadius.zero),
+                  ),
+                  shadowColor:
+                      const MaterialStatePropertyAll(Colors.transparent),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Image.asset(
+                        menu[index].image!,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.center,
+                        width: 70,
+                        height: 70,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              menu[index].name!,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            Text(
+                                "ราคา: ${NumberFormat("#,###").format(menu[index].price)} บาท")
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ));
+        },
+      );
+    }
   }
 }
 

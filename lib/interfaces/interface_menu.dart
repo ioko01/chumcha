@@ -3,9 +3,10 @@
 Map<String, dynamic> map = jsonDecode(<myJSONString>);
 var myRootNode = Root.fromJson(map);
 */
+import 'package:chumcha/interfaces/interface_date.dart';
 import 'package:chumcha/redux/menu_reducers.dart';
 
-class IMenu {
+class IMenu extends IsDate {
   String? name;
   String? description;
   int? price;
