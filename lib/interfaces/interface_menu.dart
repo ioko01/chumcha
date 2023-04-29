@@ -5,6 +5,7 @@ var myRootNode = Root.fromJson(map);
 */
 import 'package:chumcha/interfaces/interface_date.dart';
 import 'package:chumcha/redux/menu_reducers.dart';
+import 'package:intl/intl.dart';
 
 class IMenu extends IsDate {
   String? name;
@@ -29,6 +30,8 @@ class IMenu extends IsDate {
     detail = json['detail'];
     category = json['category'];
     image = json['image'];
+    createdAt = json['createdAt'];
+    updatedAt = json['updatedAt'];
   }
 
   Map<String, dynamic> toJson() {
@@ -39,6 +42,8 @@ class IMenu extends IsDate {
     data['detail'] = detail;
     data['category'] = category;
     data['image'] = image;
+    data['createdAt'] = createdAt;
+    data['updatedAt'] = updatedAt;
     return data;
   }
 }

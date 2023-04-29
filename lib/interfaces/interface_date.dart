@@ -4,8 +4,8 @@ Map<String, dynamic> map = jsonDecode(<myJSONString>);
 var myDateNode = Date.fromJson(map);
 */
 class IsDate {
-  String? createdAt;
-  String? updatedAt;
+  Map<String, dynamic>? createdAt;
+  Map<String, dynamic>? updatedAt;
 
   IsDate({this.createdAt, this.updatedAt});
 

@@ -9,6 +9,9 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:intl/intl.dart';
 import 'package:chumcha/widgets/modal_dialog.dart';
 import 'package:chumcha/widgets/modal_listview.dart';
+import 'package:chumcha/utils/resize.dart';
+import 'package:chumcha/utils/image_data.dart';
+import 'dart:typed_data';
 
 double widthScreen = 150;
 
@@ -68,6 +71,9 @@ class ListMenu extends StatelessWidget {
         itemCount: menu.length,
         itemBuilder: (context, index) {
           final btnColor = index % 2 == 0 ? Colors.grey.shade100 : Colors.white;
+          ResizeImage resizeImage = ResizeImage(AssetImage(menu[index].image!),
+              width: 70, height: 70);
+
           return SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -94,13 +100,7 @@ class ListMenu extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Image.asset(
-                        menu[index].image!,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.center,
-                        width: 70,
-                        height: 70,
-                      ),
+                      Image(image: resizeImage),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
                         child: Column(
