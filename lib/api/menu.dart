@@ -7,8 +7,8 @@ import 'dart:convert';
 Future<String> getMenu() async {
   try {
     bool mobile = IsDevice().isMobile();
-    String port = "http://127.0.0.1:8000";
-    String url = (mobile) ? port = "http://10.0.2.2:8000" : port;
+    String port = "https://chumcha.netlify.app";
+    String url = (mobile) ? port = "https://chumcha.netlify.app" : port;
     http.Response response = await http.get(Uri.parse("$url/get/menu"));
     if (response.statusCode == 200) {
       return response.body;
@@ -25,8 +25,8 @@ Future<String> getMenu() async {
 Future<String> confirmMenu(List<IMenu> tempMenu) async {
   try {
     bool mobile = IsDevice().isMobile();
-    String port = "http://127.0.0.1:8000";
-    String url = (mobile) ? port = "http://10.0.2.2:8000" : port;
+    String port = "https://chumcha.netlify.app";
+    String url = (mobile) ? port = "https://chumcha.netlify.app" : port;
     dynamic response = await http.post(
       Uri.parse("$url/confirm/menu"),
       body: jsonEncode(tempMenu),
@@ -46,8 +46,8 @@ Future<String> confirmMenu(List<IMenu> tempMenu) async {
 Future<String> getConfirmMenu() async {
   try {
     bool mobile = IsDevice().isMobile();
-    String port = "http://127.0.0.1:8000";
-    String url = (mobile) ? port = "http://10.0.2.2:8000" : port;
+    String port = "https://chumcha.netlify.app";
+    String url = (mobile) ? port = "https://chumcha.netlify.app" : port;
     dynamic response = await http.get(Uri.parse("$url/get/confirm/menu"));
     if (response.statusCode == 200) {
       return response.body;

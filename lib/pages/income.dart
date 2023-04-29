@@ -23,7 +23,6 @@ class Income extends StatelessWidget {
               if (snapshot.connectionState == ConnectionState.done) {
                 String data = snapshot.data.toString();
                 List<IMenu>? menu;
-                List<IMenu>? thisIsMenu = [];
                 if (data.contains("errorMessage")) {
                   menu = [];
                 } else {
@@ -53,7 +52,6 @@ class Income extends StatelessWidget {
 
                     if (now.contains(thisDate)) {
                       thisIsPrice.add(thisIsBill[j].price!);
-                      thisIsMenu.add(menu[i]);
                     }
                     thisIsPriceAll.add(thisIsBill[j].price!);
                   }
@@ -62,18 +60,6 @@ class Income extends StatelessWidget {
                 return Wrap(
                   alignment: WrapAlignment.spaceAround,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.all(10),
-                      width: double.infinity,
-                      color: Colors.amber,
-                      child: Column(
-                        children: [
-                          const Text("บิลที่ขายได้วันนี้"),
-                          Text(NumberFormat("#,###").format(thisIsMenu.length))
-                        ],
-                      ),
-                    ),
                     Container(
                       padding: const EdgeInsets.all(16),
                       margin: const EdgeInsets.all(10),
