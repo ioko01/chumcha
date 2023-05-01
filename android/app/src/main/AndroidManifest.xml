@@ -2,7 +2,7 @@
     package="com.example.chumcha">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="chumcha"
+        android:label="ฉ่ำชา"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
