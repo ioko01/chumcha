@@ -49,6 +49,74 @@ class Menu extends StatelessWidget {
   }
 }
 
+class CheckBoxMenu extends StatefulWidget {
+  final List<String>? categories;
+  final List<String> filterCategories = [];
+
+  CheckBoxMenu({super.key, this.categories});
+
+  @override
+  State<CheckBoxMenu> createState() => _CheckBoxMenuState();
+}
+
+class _CheckBoxMenuState extends State<CheckBoxMenu> {
+  @override
+  Widget build(BuildContext context) {
+    int categoryLength = widget.categories?.length ?? 0;
+    List<String> listCategories = [];
+    List<Widget> listCheckbox = [];
+
+    for (int i = 0; i < categoryLength; i++) {
+      if (!listCategories.contains(widget.categories![i])) {
+        listCategories.add(widget.categories![i]);
+      }
+    }
+    listCheckbox.add(
+      Container(
+        padding: const EdgeInsets.all(8),
+        width: double.infinity,
+        child: const Text(
+          "ตัวกรอง",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+    for (int i = 0; i < listCategories.length; i++) {
+      listCheckbox.add(
+        StoreConnector<AppState, List<String>>(
+          converter: (store) => store.state.filterMenu,
+          builder: (context, categories) {
+            return SizedBox(
+              width: 130,
+              child: CheckboxMenuButton(
+                value: categories.contains(listCategories[i]) ? true : false,
+                onChanged: (value) {
+                  if (categories.contains(listCategories[i])) {
+                    StoreProvider.of<AppState>(context).dispatch(
+                        StateActionMenu(categories.indexOf(listCategories[i]),
+                            FilterMenuActions.decrement));
+                  } else {
+                    StoreProvider.of<AppState>(context).dispatch(
+                        StateActionMenu(
+                            listCategories[i], FilterMenuActions.increment));
+                  }
+                },
+                child: Text(listCategories[i]),
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      direction: Axis.horizontal,
+      children: listCheckbox,
+    );
+  }
+}
+
 class ListMenu extends StatelessWidget {
   final List<IMenu> menu;
   const ListMenu({super.key, required this.menu});
@@ -66,61 +134,85 @@ class ListMenu extends StatelessWidget {
         ),
       );
     } else {
-      return ListView.builder(
-        shrinkWrap: true,
-        itemCount: menu.length,
-        itemBuilder: (context, index) {
-          final btnColor = index % 2 == 0 ? Colors.grey.shade100 : Colors.white;
-          ResizeImage resizeImage = ResizeImage(AssetImage(menu[index].image!),
-              width: 70, height: 70);
+      List<String>? catgories = [];
+      for (var val in menu) {
+        catgories.add(val.category!);
+      }
 
-          return SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  ShowGrowDialog(
-                      context: context,
-                      title: "ยืนยันรายการ",
-                      content: ["ต้องการเพิ่มเมนู ", "เพิ่มเมนู"],
-                      data: menu[index],
-                      action: MenuActions.increment,
-                      index: index,
-                      color: [textLight, lightGreen]).showModalGrowDialog();
-                },
-                style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll(btnColor),
-                  shape: const MaterialStatePropertyAll(
-                    BeveledRectangleBorder(borderRadius: BorderRadius.zero),
-                  ),
-                  shadowColor:
-                      const MaterialStatePropertyAll(Colors.transparent),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Image(image: resizeImage),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              menu[index].name!,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16),
+      List<Widget> iMenuList = [];
+      iMenuList.add(CheckBoxMenu(categories: catgories));
+
+      for (var index = 0; index < menu.length; index++) {
+        final btnColor = index % 2 == 0 ? Colors.grey.shade100 : Colors.white;
+        ResizeImage resizeImage =
+            ResizeImage(AssetImage(menu[index].image!), width: 70, height: 70);
+
+        iMenuList.add(
+          StoreConnector<AppState, List<String>>(
+            converter: (store) => store.state.filterMenu,
+            builder: (context, categories) {
+              return Visibility(
+                visible: categories.isNotEmpty
+                    ? categories.contains(menu[index].category)
+                        ? true
+                        : false
+                    : true,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ShowGrowDialog(
+                          context: context,
+                          title: "ยืนยันรายการ",
+                          content: ["ต้องการเพิ่มเมนู ", "เพิ่มเมนู"],
+                          data: menu[index],
+                          action: MenuActions.increment,
+                          index: index,
+                          color: [textLight, lightGreen]).showModalGrowDialog();
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStatePropertyAll(btnColor),
+                      shape: const MaterialStatePropertyAll(
+                        BeveledRectangleBorder(borderRadius: BorderRadius.zero),
+                      ),
+                      shadowColor:
+                          const MaterialStatePropertyAll(Colors.transparent),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Image(image: resizeImage),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  menu[index].name!,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                                Text(
+                                    "ราคา: ${NumberFormat("#,###").format(menu[index].price)} บาท")
+                              ],
                             ),
-                            Text(
-                                "ราคา: ${NumberFormat("#,###").format(menu[index].price)} บาท")
-                          ],
-                        ),
-                      )
-                    ],
+                          )
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ));
-        },
+              );
+            },
+          ),
+        );
+      }
+
+      return SingleChildScrollView(
+        child: Column(children: iMenuList),
       );
     }
   }

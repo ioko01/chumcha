@@ -18,15 +18,19 @@ String fontFamily = "FC Minimal";
 class AppState {
   List<IMenu> menu;
   bool tempMenu;
+  List<String> filterMenu;
 
-  AppState(this.menu, this.tempMenu);
+  AppState(this.menu, this.tempMenu, this.filterMenu);
 }
 
 AppState appReducer(AppState state, action) => AppState(
-    menuReducer(state.menu, action), tempMenuReducer(state.tempMenu, action));
+    menuReducer(state.menu, action),
+    tempMenuReducer(state.tempMenu, action),
+    filterMenuReducer(state.filterMenu, action));
 
 void main(List<String> args) {
-  final store = Store<AppState>(appReducer, initialState: AppState([], false));
+  final store =
+      Store<AppState>(appReducer, initialState: AppState([], false, []));
   runApp(MyApp(title: "ฉ่ำชา @กุดป่อง", store: store));
 }
 
