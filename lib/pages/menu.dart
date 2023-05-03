@@ -163,7 +163,7 @@ class ListMenu extends StatelessWidget {
                     onPressed: () {
                       ShowGrowDialog(
                           context: context,
-                          title: "ยืนยันรายการ",
+                          title: "รายละเอียด",
                           content: ["ต้องการเพิ่มเมนู ", "เพิ่มเมนู"],
                           data: menu[index],
                           action: MenuActions.increment,

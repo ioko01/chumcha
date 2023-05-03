@@ -7,28 +7,16 @@ import 'package:chumcha/interfaces/interface_date.dart';
 import 'package:chumcha/redux/menu_reducers.dart';
 import 'package:intl/intl.dart';
 
-class IMenu extends IsDate {
+class ITopping extends IsDate {
   String? name;
-  List<String>? topping;
   int? price;
-  String? detail;
-  String? category;
   String? image;
 
-  IMenu(
-      {this.name,
-      this.topping,
-      this.price,
-      this.detail,
-      this.category,
-      this.image});
+  ITopping({this.name, this.price, this.image});
 
-  IMenu.fromJson(Map<String, dynamic> json) {
+  ITopping.fromJson(Map<String, dynamic> json) {
     name = json['name'];
-    topping = json['topping'];
     price = json['price'];
-    detail = json['detail'];
-    category = json['category'];
     image = json['image'];
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
@@ -37,10 +25,7 @@ class IMenu extends IsDate {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
     data['name'] = name;
-    data['topping'] = topping;
     data['price'] = price;
-    data['detail'] = detail;
-    data['category'] = category;
     data['image'] = image;
     data['createdAt'] = createdAt;
     data['updatedAt'] = updatedAt;
@@ -48,30 +33,31 @@ class IMenu extends IsDate {
   }
 }
 
-class ListIMenu {
-  List<IMenu?>? menu;
+class ListITopping {
+  List<ITopping?>? topping;
 
-  ListIMenu({this.menu});
+  ListITopping({this.topping});
 
-  ListIMenu.fromJson(Map<String, dynamic> json) {
+  ListITopping.fromJson(Map<String, dynamic> json) {
     if (json['menu'] != null) {
-      menu = <IMenu>[];
+      topping = <ITopping>[];
       json['menu'].forEach((v) {
-        menu!.add(IMenu.fromJson(v));
+        topping!.add(ITopping.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
-    data['menu'] = menu != null ? menu!.map((v) => v?.toJson()).toList() : null;
+    data['menu'] =
+        topping != null ? topping!.map((v) => v?.toJson()).toList() : null;
     return data;
   }
 }
 
-class StateActionMenu extends IMenu {
+class StateActionTopping extends ITopping {
   dynamic state;
   dynamic action;
 
-  StateActionMenu(this.state, this.action);
+  StateActionTopping(this.state, this.action);
 }

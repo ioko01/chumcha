@@ -6,6 +6,8 @@ enum TempMenuActions { open, close }
 
 enum FilterMenuActions { increment, decrement, reset }
 
+enum ToppingMenuActions { increment, decrement, reset }
+
 List<IMenu> menuReducer(List<IMenu> state, dynamic action) {
   if (action.action == MenuActions.increment) {
     state.add(action.state);
@@ -41,3 +43,4 @@ List<String> filterMenuReducer(List<String> state, dynamic action) {
   }
   return state;
 }
+
